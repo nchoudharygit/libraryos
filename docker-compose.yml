@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: libraryos-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sh:/docker-entrypoint-initdb.d/init.sh
+    ports:
+      - "5433:5432"
+    networks:
+      - libraryos-network
+
+  catalog-service:
+    build:
+      context: ./services/catalog-service
+      dockerfile: Dockerfile
+    container_name: catalog-service
+    environment:
+      APP_ENV: local
+      APP_KEY: base64:somerandombas64key==
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: catalog_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres
+    networks:
+      - libraryos-network
+    volumes:
+      - ./services/catalog-service:/var/www/html
+
+networks:
+  libraryos-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

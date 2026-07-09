@@ -28,3 +28,17 @@ Homestead.json
 .env.production
 .phpactor.json
 auth.json
+DEVELOPMENT_GUIDE.md
+
+#core php 
+
+catalog-service-core-php/vendor/
+catalog-service-core-php/node_modules/
+catalog-service-core-php/npm-debug.log
+catalog-service-core-php/yarn-error.log
+catalog-service-core-php/.phpunit.result.cache
+catalog-service-core-php/public/build
+catalog-service-core-php/storage/pail
+catalog-service-core-php/.phpactor.json
+catalog-service-core-php/auth.json
+catalog-service-core-php/config/database.php
