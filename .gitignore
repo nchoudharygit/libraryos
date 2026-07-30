@@ -41,4 +41,4 @@ catalog-service-core-php/public/build
 catalog-service-core-php/storage/pail
 catalog-service-core-php/.phpactor.json
 catalog-service-core-php/auth.json
-catalog-service-core-php/config/database.php
+catalog-service-core-php/config/database.php*.logs
