@@ -1,19 +1,21 @@
 ## ci for php laravel catalog service build  , test and push docker 
 #image to ECR and deploy to ECS
 
-name: CI Pipeline - Build and Push Docker Image to ECR
+name: CI Pipeline for catalog service
 
 on:
   pull_request:
     branches:
       - main
 jobs:
-  build:
+
+  test:
     runs-on: ubuntu-latest
     steps:
+
       - name: Checkout code
-        uses: actions/checkout@v3
- 
+        uses: actions/checkout@v4
+
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -22,90 +24,24 @@ jobs:
           ini-values: post_max_size=256M, upload_max_filesize=256M
 
       - name: Install Composer dependencies
-        run: composer install --no-progress --no-suggest --prefer-dist  
+        working-directory: services/catalog-service
+        run: composer install --no-progress  --prefer-dist
 
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
       - name: php artisan test
+        working-directory: services/catalog-service
         run: php artisan test
 
-  push docker image to ECR:
+  build:
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
+
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-south-1
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
 
-## build, tag, and push catalog Docker image to Amazon ECR
-      - name: Build, tag, and push catalog Docker image to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: libraryos-catalog-ecr
-          IMAGE_TAG: ${{ github.sha }}
-          IMAGE_TAG_LATEST: latest
-        run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-## build, tag, and push nginx Docker image to Amazon ECR
-      - name: Build, tag, and push nginx Docker image to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: libraryos-catalog-nginx-ecr
-          IMAGE_TAG: ${{ github.sha }}
-          IMAGE_TAG_LATEST: latest
-        run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_LATEST
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-     
-      # - name: Deploy to ECS
-      #   run: |
-      #     aws ecs update-service --cluster my-cluster --service my-service --force-new-deployment
+      - name: Build catalog service docker image
+        run: docker build -t catalog-service:latest services/catalog-service
+
+      - name: Build catalog nginx docker image
+        run: docker build -t catalog-nginx:latest -f services/catalog-service/docker/Dockerfile.nginx services/catalog-service
