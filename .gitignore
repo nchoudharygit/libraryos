@@ -45,12 +45,10 @@ catalog-service-core-php/config/database.php*.logs
 catalog-service-core-php/config/database.php
 catalog-service-core-php/core-php-catalog/
 
-<<<<<<< HEAD
 
 .terraform/*
 *.logs
 logs/*
-=======
 terraform.tfstate
 terraform.tfstate.backup
->>>>>>> c5d25a9 (ci for build and push ecr)
+
