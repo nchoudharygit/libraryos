@@ -27,10 +27,13 @@ jobs:
         working-directory: services/catalog-service
         run: composer install --no-progress --prefer-dist
 
+      - name: Create Laravel environment file
+        working-directory: services/catalog-service
+        run: cp .env.example .env
+
       - name: Generate Laravel application key
         working-directory: services/catalog-service
         run: php artisan key:generate
-
       - name: Run PHP Artisan tests
         working-directory: services/catalog-service
         run: php artisan test
