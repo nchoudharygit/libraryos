@@ -46,7 +46,7 @@ catalog-service-core-php/config/database.php
 catalog-service-core-php/core-php-catalog/
 
 
-.terraform/*
+**/.terraform/
 *.logs
 logs/*
 terraform.tfstate
