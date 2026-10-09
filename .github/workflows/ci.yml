@@ -1,0 +1,53 @@
+## ci for php laravel catalog service build  , test and push docker 
+#image to ECR and deploy to ECS
+
+name: CI Pipeline for catalog service
+
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, bcmath, pdo_mysql, curl, xml, zip
+          ini-values: post_max_size=256M, upload_max_filesize=256M
+
+      - name: Install Composer dependencies
+        working-directory: services/catalog-service
+        run: composer install --no-progress --prefer-dist
+
+      - name: Create Laravel environment file
+        working-directory: services/catalog-service
+        run: cp .env.example .env
+
+      - name: Generate Laravel application key
+        working-directory: services/catalog-service
+        run: php artisan key:generate
+      - name: Run PHP Artisan tests
+        working-directory: services/catalog-service
+        run: php artisan test
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build catalog service docker image
+        run: docker build -t catalog-service:latest services/catalog-service
+
+      - name: Build catalog nginx docker image
+        run: docker build -t catalog-nginx:latest -f services/catalog-service/docker/Dockerfile.nginx services/catalog-service
