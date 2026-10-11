@@ -61,7 +61,7 @@ resource "aws_security_group" "libraryos_ecs_service_sg" {
         from_port   = 80
         to_port     = 80
         protocol    = "tcp"
-        cidr_blocks = ["103.197.74.99/32"]
+        cidr_blocks = ["0.0.0.0/0"]
     }
     egress {
         from_port   = 0
@@ -117,6 +117,10 @@ resource "aws_ecs_task_definition" "libraryos_catalog" {
                     awslogs-stream-prefix = "libraryos-catalog"
                 }
             }
+            environment = [
+                { name = "Log_Channel", value = "stderr" },
+                { name = "Log_Level", value = "debug" }
+            ]
         },
         {
             name = "catalog_nginx"

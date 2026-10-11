@@ -18,8 +18,9 @@ COPY . .
 
 RUN composer dump-autoload --optimize --no-scripts
 
-RUN mkdir -p storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache vendor
+RUN mkdir -p storage/logs storage/framework/cache/data storage/framework/sessions storage/framework/views bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache vendor \
+    && printf "[www]\ncatch_workers_output = yes\ndecorate_workers_output = no\n" > /usr/local/etc/php-fpm.d/zz-log.conf
 
 USER www-data
 
