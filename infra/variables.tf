@@ -26,3 +26,8 @@
 # #   type        = list(string)
 # #   description = "Public subnets for the Gateway/Load Balancer"
 # # }
+
+variable "image_tag" {
+  type        = string
+  description = "The image tag for the microservice"
+}
