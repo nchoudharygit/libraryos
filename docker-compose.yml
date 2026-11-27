@@ -15,6 +15,7 @@ services:
     networks:
       - libraryos-network
 
+#### catalog php and nginx services
   catalog_fpm:
     build:
       context: ./services/catalog-service
@@ -40,6 +41,8 @@ services:
       context: ./services/catalog-service
       dockerfile: docker/Dockerfile.nginx
     container_name: catalog-nginx
+    environment:
+      FPM_HOST: catalog_fpm
     ports:
       - "8001:80"
     depends_on:
@@ -47,6 +50,125 @@ services:
     networks:
       - libraryos-network
 
+## consumer php and nginx services
+  consumer_fpm:
+    build:
+      context: ./services/consumer-service
+      dockerfile: Dockerfile
+    container_name: consumer-service
+    environment:
+      APP_ENV: local
+      APP_KEY: base64:4YjGyB6R8QW1QOtAncn8rXgj5yDckZHRbxlvWxm5A0M=
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: consumer_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+   
+    depends_on:
+      - postgres
+    networks:
+      - libraryos-network
+    
+  consumer_nginx:
+    build:
+      context: ./services/consumer-service
+      dockerfile: docker/Dockerfile.nginx
+    container_name: consumer-nginx
+    environment:
+      FPM_HOST: consumer_fpm
+    ports:
+      - "8002:80"
+    depends_on:
+      - consumer_fpm
+    networks:
+      - libraryos-network
+### transaction php and nginx services
+  transaction_fpm:
+    build:
+      context: ./services/transaction-service
+      dockerfile: Dockerfile
+    container_name: transaction-service
+    environment:
+      APP_ENV: local
+      APP_KEY: base64:H+3voGNCcEnoDz0Qhhm/QPif5XZRBiA/0wsJMeZhCDo=
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: transaction_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      CATALOG_SERVICE_URL: http://catalog_nginx
+      CONSUMER_SERVICE_URL: http://consumer_nginx
+   
+    depends_on:
+      - postgres
+    networks:
+      - libraryos-network
+    
+  transaction_nginx:
+    build:
+      context: ./services/transaction-service
+      dockerfile: docker/Dockerfile.nginx
+    container_name: transaction-nginx
+    environment:
+      FPM_HOST: transaction_fpm
+    
+    ports:
+      - "8003:80"
+    depends_on:
+      - transaction_fpm
+    networks:
+      - libraryos-network
+
+## gateway php and nginx services
+  gateway_fpm:
+    build:
+      context: ./services/gateway-service
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    env_file:
+      - ./services/gateway-service/.env
+    environment:
+      APP_ENV: local
+      APP_KEY: base64:eUcT3ksgob5H9epmKjUG/8vR1nkgKswZbsb1xwpvlsk=
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: gateway_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      CATALOG_SERVICE_URL: http://catalog_nginx
+      CONSUMER_SERVICE_URL: http://consumer_nginx
+      TRANSACTION_SERVICE_URL: http://transaction_nginx
+      # AUTH0_CLIENT_ID: ${AUTH0_CLIENT_ID}
+      # AUTH0_CLIENT_SECRET: ${AUTH0_CLIENT_SECRET}
+      # AUTH0_DOMAIN: ${AUTH0_DOMAIN}
+      # AUTH0_CALLBACK_URI: ${AUTH0_CALLBACK_URI}
+      # VITE_APP_NAME: "${APP_NAME}"
+      # VITE_AUTH0_CLIENT_ID: "${AUTH0_CLIENT_ID}"
+      # VITE_AUTH0_DOMAIN: "${AUTH0_DOMAIN}"
+    depends_on:
+      - postgres
+    networks:
+      - libraryos-network
+    
+  gateway_nginx:
+    build:
+      context: ./services/gateway-service
+      dockerfile: docker/Dockerfile.nginx
+    container_name: gateway-nginx
+    environment:
+      FPM_HOST: gateway_fpm
+    
+    ports:
+      - "8000:80"
+    depends_on:
+      - gateway_fpm
+    networks:
+      - libraryos-network
+ #### networks and volumes
 networks:
       libraryos-network:
         driver: bridge
