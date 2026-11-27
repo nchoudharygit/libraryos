@@ -1,0 +1,7 @@
+FROM nginx:alpine
+
+ENV FPM_HOST=127.0.0.1
+
+COPY docker/nginx.conf /etc/nginx/templates/default.conf.template
+
+EXPOSE 80
